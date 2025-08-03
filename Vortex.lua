@@ -6692,22 +6692,30 @@ else
 	Fluent = Library
 end
 
+
+-- Synchronized and Functional Minimize Button
+
 local MinimizeButton = New("TextButton", {
     BackgroundTransparency = 1,
-    Size = UDim2.new(1, 0, 1, 0),
-    BorderSizePixel = 0
+    Size = UDim2.fromScale(1, 1),
+    BorderSizePixel = 0,
+    ClipsDescendants = true,
 }, {
     New("UIPadding", {
-        PaddingBottom = UDim.new(0, 2),
-        PaddingLeft = UDim.new(0, 2),
-        PaddingRight = UDim.new(0, 2),
-        PaddingTop = UDim.new(0, 2),
+        PaddingBottom = UDim.new(0.08, 0),
+        PaddingLeft = UDim.new(0.08, 0),
+        PaddingRight = UDim.new(0.08, 0),
+        PaddingTop = UDim.new(0.08, 0),
     }),
     New("ImageLabel", {
         Image = (Button_Icon ~= "" and Button_Icon) or "rbxassetid://93647888056248",
-        Size = UDim2.new(1, 0, 1, 0),
+        Size = UDim2.fromScale(1, 1),
         BackgroundTransparency = 1,
+        ScaleType = Enum.ScaleType.Fit,
     }, {
+        New("UICorner", {
+            CornerRadius = UDim.new(1, 0),
+        }),
         New("UIAspectRatioConstraint", {
             AspectRatio = 1,
             AspectType = Enum.AspectType.FitWithinMaxSize,
@@ -6716,11 +6724,10 @@ local MinimizeButton = New("TextButton", {
 })
 
 local Minimizer
-
 if Mobile then
     Minimizer = New("Frame", {
         Parent = GUI,
-        Size = UDim2.fromScale(0.075, 0.075),
+        Size = UDim2.fromScale(0.065, 0.065),
         Position = UDim2.new(0.5, 0, 0.025, 0),
         AnchorPoint = Vector2.new(0.5, 0),
         BackgroundTransparency = 1,
@@ -6729,11 +6736,11 @@ if Mobile then
         New("Frame", {
             BackgroundColor3 = Color3.fromRGB(0, 0, 0),
             Size = UDim2.new(1, 0, 1, 0),
-            BackgroundTransparency = 0.5,
-            BorderSizePixel = 0
+            BackgroundTransparency = 0.4,
+            BorderSizePixel = 0,
         }, {
             New("UICorner", {
-                CornerRadius = UDim.new(0.25, 0),
+                CornerRadius = UDim.new(1, 0),
             }),
             MinimizeButton
         })
@@ -6742,7 +6749,8 @@ else
     Minimizer = New("Frame", {
         Parent = GUI,
         Size = UDim2.new(0, 0, 0, 0),
-        Position = UDim2.new(0.45, 0, 0.025, 0),
+        Position = UDim2.new(0.5, 0, 0.025, 0),
+        AnchorPoint = Vector2.new(0.5, 0),
         BackgroundTransparency = 1,
         ZIndex = 999999999,
         Visible = false
@@ -6750,84 +6758,22 @@ else
         New("Frame", {
             BackgroundColor3 = Color3.fromRGB(0, 0, 0),
             Size = UDim2.new(0, 0, 0, 0),
-            BackgroundTransparency = 0,
-            BorderSizePixel = 0
+            BackgroundTransparency = 0.4,
+            BorderSizePixel = 0,
         }, {
             New("UICorner", {
-                CornerRadius = UDim.new(0.25, 0),
+                CornerRadius = UDim.new(1, 0),
             }),
             MinimizeButton
         })
     })
 end
 
-Creator.AddSignal(Minimizer.InputBegan, function(Input)
-    if
-        Input.UserInputType == Enum.UserInputType.MouseButton1
-        or Input.UserInputType == Enum.UserInputType.Touch
-    then
-        Dragging = true
-        MousePos = Input.Position
-        StartPos = Minimizer.Position
-
-        Input.Changed:Connect(function()
-            if Input.UserInputState == Enum.UserInputState.End then
-                Dragging = false
-            end
-        end)
-    end
-end)
-
-Creator.AddSignal(MinimizeButton.InputChanged, function(Input)
-    if
-        Input.UserInputType == Enum.UserInputType.MouseMovement
-        or Input.UserInputType == Enum.UserInputType.Touch
-    then
-        DragInput = Input
-    end
-end)
-
-Creator.AddSignal(Minimizer.InputChanged, function(Input)
-    if
-        Input.UserInputType == Enum.UserInputType.MouseMovement
-        or Input.UserInputType == Enum.UserInputType.Touch
-    then
-        DragInput = Input
-    end
-end)
-
-Creator.AddSignal(UserInputService.InputChanged, function(Input)
-    if Input == DragInput and Dragging then
-        local GuiInset = game:GetService("GuiService"):GetGuiInset()
-        local Delta = Input.Position - MousePos
-        local ViewportSize = workspace.Camera and workspace.Camera.ViewportSize or Vector2.new(800, 600)
-        local CurrentX = StartPos.X.Scale + (Delta.X / ViewportSize.X)
-        local CurrentY = StartPos.Y.Scale + (Delta.Y / ViewportSize.Y)
-
-        if CurrentX < 0 or CurrentX > (ViewportSize.X - Minimizer.AbsoluteSize.X) / ViewportSize.X then
-            if CurrentX < 0 then
-                CurrentX = 0
-            else
-                CurrentX = (ViewportSize.X - Minimizer.AbsoluteSize.X) / ViewportSize.X
-            end
-        end
-
-        if CurrentY < 0 or CurrentY > ((ViewportSize.Y + GuiInset.Y) - Minimizer.AbsoluteSize.Y) / (ViewportSize.Y + GuiInset.Y) then
-            if CurrentY < 0 then
-                CurrentY = 0
-            else
-                CurrentY = ((ViewportSize.Y + GuiInset.Y) - Minimizer.AbsoluteSize.Y) / (ViewportSize.Y + GuiInset.Y)
-            end
-        end
-
-        Minimizer.Position = UDim2.fromScale(CurrentX, CurrentY)
-    end
-end)
+-- Functional toggle visibility
+local Interface = Library.Window and Library.Window.Main or GUI
+local isMinimized = false
 
 AddSignal(MinimizeButton.MouseButton1Click, function()
-    Library.Window:Minimize()
+    isMinimized = not isMinimized
+    Interface.Visible = not isMinimized
 end)
-
-task.wait(0.1)
-
-return Library, SaveManager, InterfaceManager, Mobile
